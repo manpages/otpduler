@@ -68,12 +68,18 @@ manager_assign(Manager, Node, TaskID) ->
 %implementation
 init([]) ->
 	get_overseer(),
-	io:format("init> ~p~n", [[gen_server:call({global, odl_server}, {hi, {node(), manager}})]]),
+	io:format("<<INIT>> ~p~n", [[gen_server:call({global, odl_server}, {hi, {node(), ?SERVER}})]]),
 	{ok, []}
 .
 
-handle_call(_X, _Y, State) -> {noreply, State}.
+handle_cast({node_idle, Node}, State) ->
+	io:format("<<CAST>> node_idle -> ~p~n", [Node]),
+	{noreply, State}
+;
+
 handle_cast(_Msg, State) -> {noreply, State}.
+
+handle_call(_X, _Y, State) -> {noreply, State}.
 handle_info(_Msg, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.
 code_change(_OldVersion, State, _Extra) -> {ok, State}.
