@@ -73,10 +73,12 @@ broadcast(Message, ServerT, State, CastOrCall) ->
 	case dict:find(ServerT, State#state.resources) of
 		{ok, ResourceList} -> lists:foreach(fun(X) ->
 			case net_adm:ping(X) of 
-				pong -> case CastOrCall of
-					call -> gen_server:call({ServerT, X}, Message);
-					_    -> gen_server:cast({ServerT, X}, Message)
-				end;
+				pong -> 
+					io:format("<<SEND>> ~p to ~p at ~p~n", [Message, ServerT, X]),
+					case CastOrCall of
+						call -> gen_server:call({ServerT, X}, Message);
+						_    -> gen_server:cast({ServerT, X}, Message)
+					end;
 				pang -> false
 			end
 		end,
@@ -132,7 +134,7 @@ handle_call({hi, {Node, Type}}, F, State) ->
 handle_cast({node_idle, Node}, State) ->
 	io:format("<<CALL>> node_idle -> ~p~n", [Node]),
 	bcast({node_idle, Node}, [odl_manager, odl_frontend], State),
-	return(Node, node, State)
+	{noreply, State}
 ;
 
 
