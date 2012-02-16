@@ -70,7 +70,7 @@ init([]) ->
 	spawn(get_overseer(), 
 		fun() -> odl_server:hi(node(), manager) end
 	),
-	{ok, [ZZ]}
+	{ok, []}
 .
 
 handle_call(_X, _Y, State) -> {noreply, State}.
