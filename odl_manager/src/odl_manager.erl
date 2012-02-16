@@ -67,9 +67,7 @@ manager_assign(Manager, Node, TaskID) ->
 
 %implementation
 init([]) ->
-	spawn(get_overseer(), 
-		fun() -> odl_server:hi(node(), manager) end
-	),
+	gen_server:call({global, odl_server}, {hi, {node(), manager}}),
 	{ok, []}
 .
 
