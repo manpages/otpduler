@@ -67,7 +67,8 @@ manager_assign(Manager, Node, TaskID) ->
 
 %implementation
 init([]) ->
-	gen_server:call({global, odl_server}, {hi, {node(), manager}}),
+	get_overseer(),
+	io:format("init> ~p~n", [[gen_server:call({global, odl_server}, {hi, {node(), manager}})]]),
 	{ok, []}
 .
 

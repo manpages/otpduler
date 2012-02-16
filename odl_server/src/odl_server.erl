@@ -39,10 +39,19 @@
 
 %state
 -record(state, {
-	frontends,
-	managers,
-	nodes
+	resources
 }).
+
+%private shit
+add_resource(Type, Identifier, Dict) ->
+	case dict:find(Type, Dict) of
+		{ok, ResourceList} ->
+			NewList = [Identifier|lists:delete(Identifier, ResourceList)],
+			dict:store(Type, NewList, Dict);
+		error ->
+			dict:store(Type, [Identifier], Dict)
+	end
+.
 
 %interface-ish
 start_link() ->
@@ -78,11 +87,13 @@ task_swap(Frontend, TaskID1, TaskID2) ->
 
 %implementation, kinda
 init([]) ->
-	{ok, []}.
+	{ok, #state{		
+		resources = dict:new()
+	}}.
 
-handle_call({hi, {Node, Type}}, F, T) ->
-	io:format("HELLO ~p of type ~p (from ~p)", [Node, Type, F]),
-	{reply, T,T}
+handle_call({hi, {Node, Type}}, F, State) ->
+	io:format("hi> ~p of type ~p~n", [Node, Type, F]),
+	{reply, State#state{resources = add_resource(Type, Node, State)}}
 .
 
 handle_cast(_Msg, State) -> {noreply, State}.
