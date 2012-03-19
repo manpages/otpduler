@@ -1,5 +1,8 @@
 -module(odl_manager).
 
+-include("../../include/node.hrl").
+-include_lib("eunit/include/eunit.hrl").
+
 -behaviour(gen_server).
 
 -define(SERVER, ?MODULE).
@@ -38,6 +41,7 @@ get_overseer() ->
 
 %interface-ish
 start_link() ->
+	get_overseer(),
 	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 node_idle(Node) -> 
@@ -67,19 +71,21 @@ manager_assign(Manager, Node, TaskID) ->
 
 %implementation
 init([]) ->
-	get_overseer(),
-	io:format("<<INIT>> ~p~n", [[gen_server:call({global, odl_server}, {hi, {node(), ?SERVER}})]]),
+	net_kernel:monitor_nodes(true),
+	?debugFmt("<<INIT>> ~p~n", [[gen_server:call({global, odl_server}, {hi, {node(), ?SERVER}})]]),
 	{ok, []}
 .
 
 handle_cast({node_idle, Node}, State) ->
-	io:format("<<CAST>> node_idle -> ~p~n", [Node]),
+	?debugFmt("<<CAST>> node_idle -> ~p~n", [Node]),
 	{noreply, State}
 ;
 
 handle_cast(_Msg, State) -> {noreply, State}.
 
 handle_call(_X, _Y, State) -> {noreply, State}.
-handle_info(_Msg, State) -> {noreply, State}.
+handle_info(Msg, State) -> 
+	?debugFmt("<<INFO>> ! ~p~n", [Msg]),
+	{noreply, State}.
 terminate(_Reason, _State) -> ok.
 code_change(_OldVersion, State, _Extra) -> {ok, State}.

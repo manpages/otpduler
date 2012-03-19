@@ -1,0 +1,34 @@
+{application,resource_discovery,
+	[
+		{description,"Resource discovery & management"},
+
+		{vsn,"0.2.1.0"},
+
+		{modules, [
+			rd_log,
+			rd_core,
+			rd_heartbeat,
+			rd_store,
+			rd_sup,rd_util,
+			resource_discovery
+		]},
+
+		{registered,[]},
+
+		{applications, [
+			kernel,
+			stdlib,
+		]},
+
+		{env, [
+			{heartbeat_frequency,60000}
+		]},
+
+		{mod,
+			{resource_discovery, [
+				{heartbeat_frequency,60000}
+			]}
+		}
+
+	]
+}.
