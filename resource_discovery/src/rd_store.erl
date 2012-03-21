@@ -17,40 +17,40 @@
 
 % Create
 -export([
-         new/0,
-	 delete/0
-        ]).
+	new/0,
+	delete/0
+]).
 
 % Lookup
 -export([
-         round_robin_get/1,
-         get_resources/1,
-         get_callback_modules/0,
-         get_local_resource_tuples/0,
-	 get_deleted_resource_tuples/0,
-         get_target_resource_types/0,
-         get_num_resource_types/0,
-	 get_num_resource/1,
-         get_resource_types/0
-        ]).
+	round_robin_get/1,
+	get_resources/1,
+	get_callback_modules/0,
+	get_local_resource_tuples/0,
+	get_deleted_resource_tuples/0,
+	get_target_resource_types/0,
+	get_num_resource_types/0,
+	get_num_resource/1,
+	get_resource_types/0
+]).
 
 % Delete
 -export([
-         delete_local_resource_tuple/1,
-         delete_target_resource_type/1,
-         delete_callback_module/1,
-         delete_resource_tuple/1,
-	 delete_deleted_resource_tuple/0
-        ]).
+	delete_local_resource_tuple/1,
+	delete_target_resource_type/1,
+	delete_callback_module/1,
+	delete_resource_tuple/1,
+	delete_deleted_resource_tuple/0
+]).
 
 % Store
 -export([
-         store_local_resource_tuples/1,
-         store_callback_modules/1,
-         store_target_resource_types/1,
-         store_resource_tuples/1,
-         store_resource_tuple/1
-        ]).
+	store_local_resource_tuples/1,
+	store_callback_modules/1,
+	store_target_resource_types/1,
+	store_resource_tuples/1,
+	store_resource_tuple/1
+]).
 
 %%--------------------------------------------------------------------
 %% Macros
