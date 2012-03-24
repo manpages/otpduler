@@ -3,11 +3,13 @@
 -include("../../include/task.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
--export([
-	get/2,
-	queue/3,
-	swap/3
-]).
+-compile(export_all).
+
+%-export([
+%	get/2,
+%	queue/3,
+%	swap/3
+%]).
 
 first_seed(QID) -> 
 	fission_syn:get_def({queue, QID, first}, 0).
@@ -15,36 +17,42 @@ first_seed(QID) ->
 size(QID) ->
 	fission_syn:get_def({queue, QID, size}, 0).
 
-size_pp(QID) ->
-	R = odl_queue:size(QID),
+insert_bottom(QID) ->
 	fission_syn:inc({queue, QID, size}, 1),
-	R
+	last_seed(QID)
 .
 
 caret(QID) ->
 	fission_syn:get_def({queue, QID, caret},  0).
 
 pull_caret(QID) ->
-	fission_syn:inc_v({queue, QID, caret}, -1).
+	fission_syn:inc({queue, QID, size}, 1),
+	NewCaretPosition = fission_syn:inc_v({queue, QID, caret}, -1),
+	case (first_seed(QID) > NewCaretPosition) of
+		true -> fission_syn:set({queue, QID, first}, NewCaretPosition);
+		_ -> ok
+	end,
+	NewCaretPosition
+.
 
 push_caret(QID) ->
 	fission_syn:inc_v({queue, QID, caret}, 1).
 
 
 last_seed(QID) -> 
-	odl_task:size(QID) - 1 + first_seed(QID).
+	odl_queue:size(QID) - 1 + first_seed(QID).
 
 get(QID, EID) ->
 	fission_syn:get({queue, QID, entity, EID}).
 
 top(QID) ->
-	case fission_syn:get({queue, QID, entity, first_seed(QID)}) of
+	case fission_syn:get({queue, QID, entity, caret(QID)}) of
 		{value, E} -> nil,E;
 		_ -> false
 	end
 .
 
-queue(TaskOrQueue, WhereToInsert, TopOrBottom) -> % {task, Task} | queue
+queue(TaskOrQueue, TargetQID, TopOrBottom) -> % {task, Task} | queue
 	Entity = case TaskOrQueue of
 		{task, Task} ->
 			% first we actually store the Task data
@@ -52,7 +60,7 @@ queue(TaskOrQueue, WhereToInsert, TopOrBottom) -> % {task, Task} | queue
 			fission_syn:set({task, TID}, #taskT{
 				task = Task
 			}),
-			?debugFmt("<<QUEUE>> Adding Task ~p ~n <<<>>>> under ID ~p~n", [Task, TID]),
+			?debugFmt("<<QUEUE>> Adding Task ~p under ID ~p~n", [Task, TID]),
 			{task, TID};
 		queue ->
 			% or store new empty queue
@@ -61,12 +69,13 @@ queue(TaskOrQueue, WhereToInsert, TopOrBottom) -> % {task, Task} | queue
 	end,
 	% then we link the newborn entity to the desired queue
 	EID = case TopOrBottom of 
-		top -> pull_caret(WhereToInsert);
-		bottom -> size_pp(WhereToInsert)
+		top -> pull_caret(TargetQID);
+		bottom -> insert_bottom(TargetQID)
 	end,
 	fission_syn:set({Entity, seed}, EID),
-	?debugFmt("<<QUEUE>> Inserting ~p into queue with ID ~p at ~p~n", [Entity, WhereToInsert, EID]),
-	fission_syn:set_v({queue, WhereToInsert, entity, EID}, Entity)
+	?debugFmt("<<QUEUE>> Inserting ~p into queue with ID ~p at ~p~n", [Entity, TargetQID, EID]),
+	?debugFmt("<<QUEUE>> First ~p; Last ~p; Size ~p", [first_seed(TargetQID), last_seed(TargetQID), odl_queue:size(TargetQID)]),
+	fission_syn:set({queue, TargetQID, entity, EID}, Entity)
 .
 
 swap(Q, E1, E2) -> %EN = {task|queue, EID}

@@ -15,6 +15,6 @@
 
 -spec info(term(), list()) -> ok.
 info(Fmt, Args) ->
-	?debugFmt(Fmt, Args),
+	%?debugFmt(Fmt, Args),
 	ok
 .

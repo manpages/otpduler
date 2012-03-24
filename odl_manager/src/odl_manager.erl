@@ -14,16 +14,16 @@
 
 %node
 -export([
-	node_idle/1,
-	node_working/2,
-	node_done/3,
-	node_wont_handle/2
+	node_idle/2,
+	node_working/3,
+	node_done/4,
+	node_wont_handle/3
 ]).
 
 %frontend
 -export([
-	task_set/2,
-	task_swap/3
+	task_set/3,
+	task_swap/4
 ]).
 
 %gen_server
@@ -31,48 +31,50 @@
 	terminate/2, code_change/3]).
 
 %private
-get_overseer() ->
-	X = 'overseer@memorici.de',
-	case net_adm:ping(X) of
-		pong -> X;
-		_    -> false
-	end
-.
+%get_overseer() ->
+%	X = 'overseer@memorici.de',
+%	case net_adm:ping(X) of
+%		pong -> X;
+%		_    -> false
+%	end
+%.
 
 %interface-ish
 start_link() ->
-	get_overseer(),
 	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-node_idle(Node) -> 
-	gen_server:call(?SERVER, {node_idle, Node}).
+node_idle(PID, NodePID) -> 
+	gen_server:call(PID, {node_idle, NodePID}).
 
-node_working(Node, TaskID) ->
-	gen_server:call(?SERVER, {node_working, {Node, TaskID}}).
+node_working(PID, NodePID, TaskID) ->
+	gen_server:call(PID, {node_working, {NodePID, TaskID}}).
 
-node_done(Node, TaskID, Result) ->
-	gen_server:call(?SERVER, {node_done, {Node, TaskID, Result}}).
+node_done(PID, NodePID, TaskID, Result) ->
+	gen_server:call(PID, {node_done, {NodePID, TaskID, Result}}).
 
-node_wont_handle(Node, TaskID) ->
-	gen_server:call(?SERVER, {wont_handle, {Node, TaskID}}). 
-
-
-
-task_set(Frontend, Task) ->
-	gen_server:call(?SERVER, {task_set, {Frontend, Task}}).
-
-task_swap(Frontend, TaskID1, TaskID2) ->
-	gen_server:call(?SERVER, {task_swap, {Frontend, TaskID1, TaskID2}}).
+node_wont_handle(PID, NodePID, TaskID) ->
+	gen_server:call(PID, {wont_handle, {NodePID, TaskID}}). 
 
 
 
-manager_assign(Manager, Node, TaskID) ->
-	gen_server:call(?SERVER, {assign, {Manager, Node, TaskID}}).
+task_set(PID, FrontendPID, Task) ->
+	gen_server:call(PID, {task_set, {FrontendPID, Task}}).
+
+task_swap(PID, FrontendPID, TaskID1, TaskID2) ->
+	gen_server:call(PID, {task_swap, {FrontendPID, TaskID1, TaskID2}}).
+
 
 %implementation
 init([]) ->
-	net_kernel:monitor_nodes(true),
-	?debugFmt("<<INIT>> ~p~n", [[gen_server:call({global, odl_server}, {hi, {node(), ?SERVER}})]]),
+	application:start(resource_discovery),
+	%resource_discovery:add_local_resource_tuple([{odl_manager, self()}]), 
+	%%% REMOVED AS NOW IT'S ASSERTED BY THE APP
+	lists:foreach(
+		fun(X) -> 
+			resource_discovery:add_target_resource_type(X) 
+		end, 
+		[odl_unix_server, odl_erlang_server, odl_callback_server]
+	),
 	{ok, []}
 .
 
